@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Từ Vựng Lớp 3 Cơ Bản</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 80vh;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        #word-meaning {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #34495e;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        #word-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            min-height: 50px;
+            background-color: #f1f3f5;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        #letters-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: auto;
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .letter {
+            padding: 12px 18px;
+            font-size: 1.2rem;
+            background-color: #74c0fc;
+            color: white;
+            border: 2px solid #339af0;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .letter:hover {
+            background-color: #339af0;
+            transform: scale(1.1);
+        }
+        .letter.correct {
+            background-color: #51cf66;
+            border-color: #2f9e44;
+            cursor: default;
+            transform: none;
+        }
+        .letter.flash {
+            animation: flash 0.5s 2;
+        }
+        @keyframes flash {
+            0% { background-color: #ff6b6b; border-color: #e03131; }
+            50% { background-color: #ff8787; border-color: #f03e3e; }
+            100% { background-color: #ff6b6b; border-color: #e03131; }
+        }
+        #feedback {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        #score, #word-count {
+            font-size: 1.1rem;
+            margin: 10px 0;
+            color: #2c3e50;
+        }
+        #start-btn, #reset-btn, #replay-btn {
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            margin: 10px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #start-btn:hover, #reset-btn:hover, #replay-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        #start-btn:disabled, #reset-btn:disabled, #replay-btn:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        #congratulations {
+            display: none;
+            font-size: 2rem;
+            color: #2f9e44;
+            font-weight: bold;
+            position: relative;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            .letter, #start-btn, #reset-btn, #replay-btn {
+                font-size: 1rem;
+                padding: 10px 14px;
+            }
+            #word-meaning, #feedback {
+                font-size: 1rem;
+            }
+            #score, #word-count {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <h1>Từ Vựng Lớp 3 Cơ Bản</h1>
+            <p>Listen to the letters and click them to build the word!</p>
+            <p id="word-meaning"></p>
+            <div id="word-container"></div>
+            <p id="feedback"></p>
+            <p id="score">Score: 0</p>
+            <p id="word-count">Words Completed: 0/50</p>
+            <button id="start-btn">Start</button>
+            <button id="reset-btn">Reset Game</button>
+            <button id="replay-btn">Replay Letter</button>
+            <p id="congratulations">Congratulations! You've completed all words!</p>
+        </div>
+        <div id="letters-container"></div>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const vocabulary = [
+            { word: "school", meaning: "trường học", emoji: "🏫" },
+            { word: "teacher", meaning: "giáo viên", emoji: "👩‍🏫" },
+            { word: "student", meaning: "học sinh", emoji: "🎓" },
+            { word: "pencil", meaning: "bút chì", emoji: "✏️" },
+            { word: "pen", meaning: "bút mực", emoji: "🖋️" },
+            { word: "book", meaning: "sách", emoji: "📚" },
+            { word: "ruler", meaning: "thước", emoji: "📏" },
+            { word: "bag", meaning: "cặp sách", emoji: "🎒" },
+            { word: "eraser", meaning: "cục tẩy", emoji: "🧹" },
+            { word: "board", meaning: "bảng", emoji: "📋" },
+            { word: "table", meaning: "bàn", emoji: "🪑" },
+            { word: "father", meaning: "bố", emoji: "👨" },
+            { word: "mother", meaning: "mẹ", emoji: "👩" },
+            { word: "brother", meaning: "anh/em trai", emoji: "👦" },
+            { word: "sister", meaning: "chị/em gái", emoji: "👧" },
+            { word: "grandfather", meaning: "ông", emoji: "👴" },
+            { word: "grandmother", meaning: "bà", emoji: "👵" },
+            { word: "family", meaning: "gia đình", emoji: "👨‍👩‍👧‍👦" },
+            { word: "baby", meaning: "em bé", emoji: "👶" },
+            { word: "head", meaning: "đầu", emoji: "😶" },
+            { word: "hand", meaning: "tay", emoji: "✋" },
+            { word: "foot", meaning: "chân", emoji: "🦶" },
+            { word: "eye", meaning: "mắt", emoji: "👁️" },
+            { word: "nose", meaning: "mũi", emoji: "👃" },
+            { word: "mouth", meaning: "miệng", emoji: "👄" },
+            { word: "ear", meaning: "tai", emoji: "👂" },
+            { word: "hair", meaning: "tóc", emoji: "💇" },
+            { word: "red", meaning: "đỏ", emoji: "🔴" },
+            { word: "blue", meaning: "xanh dương", emoji: "🔵" },
+            { word: "green", meaning: "xanh lá", emoji: "🟢" },
+            { word: "yellow", meaning: "vàng", emoji: "🟡" },
+            { word: "black", meaning: "đen", emoji: "⚫" },
+            { word: "white", meaning: "trắng", emoji: "⚪" },
+            { word: "pink", meaning: "hồng", emoji: "🌸" },
+            { word: "brown", meaning: "nâu", emoji: "🟤" },
+            { word: "dog", meaning: "chó", emoji: "🐶" },
+            { word: "cat", meaning: "mèo", emoji: "🐱" },
+            { word: "bird", meaning: "chim", emoji: "🐦" },
+            { word: "fish", meaning: "cá", emoji: "🐟" },
+            { word: "duck", meaning: "vịt", emoji: "🦢" },
+            { word: "chicken", meaning: "gà", emoji: "🐔" },
+            { word: "cow", meaning: "bò", emoji: "🐄" },
+            { word: "pig", meaning: "lợn", emoji: "🐷" },
+            { word: "morning", meaning: "buổi sáng", emoji: "🌅" },
+            { word: "afternoon", meaning: "buổi chiều", emoji: "🌞" },
+            { word: "evening", meaning: "buổi tối", emoji: "🌆" },
+            { word: "night", meaning: "ban đêm", emoji: "🌙" },
+            { word: "today", meaning: "hôm nay", emoji: "📅" },
+            { word: "tomorrow", meaning: "ngày mai", emoji: "📆" },
+            { word: "now", meaning: "bây giờ", emoji: "⏰" }
+        ];
+
+        let currentWord = null;
+        let currentLetterIndex = 0;
+        let score = 0;
+        let wordsCompleted = 0;
+        let usedWords = [];
+        const wordContainer = document.getElementById("word-container");
+        const lettersContainer = document.getElementById("letters-container");
+        const wordMeaning = document.getElementById("word-meaning");
+        const feedback = document.getElementById("feedback");
+        const scoreDisplay = document.getElementById("score");
+        const wordCountDisplay = document.getElementById("word-count");
+        const startBtn = document.getElementById("start-btn");
+        const resetBtn = document.getElementById("reset-btn");
+        const replayBtn = document.getElementById("replay-btn");
+        const congratulations = document.getElementById("congratulations");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Fireworks setup
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particles = [];
+
+        function createParticle(x, y) {
+            return {
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                size: Math.random() * 5 + 2,
+                life: 100
+            };
+        }
+
+        function animateFireworks() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1;
+                p.life--;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+            });
+            if (particles.length > 0) {
+                requestAnimationFrame(animateFireworks);
+            }
+        }
+
+        function showCongratulations() {
+            congratulations.style.display = "block";
+            const rect = congratulations.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            for (let i = 0; i < 100; i++) {
+                particles.push(createParticle(x, y));
+            }
+            animateFireworks();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function getRandomWord() {
+            const availableWords = vocabulary.filter(w => !usedWords.includes(w.word));
+            if (availableWords.length === 0) return null;
+            return availableWords[Math.floor(Math.random() * availableWords.length)];
+        }
+
+        function speakLetter(letter, callback) {
+            const utterance = new SpeechSynthesisUtterance(letter);
+            utterance.lang = "en-US";
+            if (callback) {
+                utterance.onend = callback;
+            }
+            speechSynthesis.speak(utterance);
+        }
+
+        function speakWord(word, callback) {
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = "en-US";
+            if (callback) {
+                utterance.onend = callback;
+            }
+            speechSynthesis.speak(utterance);
+        }
+
+        function displayJumbledLetters(word) {
+            lettersContainer.innerHTML = "";
+            const letters = word.split("");
+            const jumbledLetters = shuffle([...letters]);
+            jumbledLetters.forEach(letter => {
+                const span = document.createElement("span");
+                span.classList.add("letter");
+                span.textContent = letter;
+                span.addEventListener("click", () => handleLetterClick(letter, span));
+                lettersContainer.appendChild(span);
+            });
+        }
+
+        function displayWordProgress() {
+            wordContainer.innerHTML = "";
+            for (let i = 0; i < currentWord.word.length; i++) {
+                const span = document.createElement("span");
+                span.classList.add("letter");
+                if (i < currentLetterIndex) {
+                    span.textContent = currentWord.word[i];
+                    span.classList.add("correct");
+                } else {
+                    span.textContent = "_";
+                }
+                wordContainer.appendChild(span);
+            }
+        }
+
+        function handleLetterClick(letter, span) {
+            if (letter.toLowerCase() === currentWord.word[currentLetterIndex]) {
+                span.classList.add("correct");
+                span.style.pointerEvents = "none";
+                feedback.textContent = "Correct!";
+                feedback.style.color = "#2f9e44";
+                currentLetterIndex++;
+                displayWordProgress();
+                if (currentLetterIndex >= currentWord.word.length) {
+                    wordsCompleted++;
+                    usedWords.push(currentWord.word);
+                    wordCountDisplay.textContent = `Words Completed: ${wordsCompleted}/${vocabulary.length}`;
+                    score += 10;
+                    scoreDisplay.textContent = `Score: ${score}`;
+                    feedback.textContent = "Well done! Word completed!";
+                    spellOutWord();
+                } else {
+                    speechSynthesis.cancel();
+                    setTimeout(() => speakLetter(currentWord.word[currentLetterIndex]), 500);
+                }
+            } else {
+                feedback.textContent = "Wrong! Try again.";
+                feedback.style.color = "#e03131";
+                const correctLetter = currentWord.word[currentLetterIndex];
+                const correctSpan = Array.from(lettersContainer.children).find(
+                    s => s.textContent === correctLetter && !s.classList.contains("correct")
+                );
+                correctSpan.classList.add("flash");
+                setTimeout(() => correctSpan.classList.remove("flash"), 1000);
+            }
+        }
+
+        function spellOutWord() {
+            let index = 0;
+            const letters = Array.from(wordContainer.children);
+            function speakNextLetter() {
+                if (index < currentWord.word.length) {
+                    const letter = currentWord.word[index];
+                    const letterSpan = letters[index];
+                    letterSpan.classList.add("flash");
+                    speakLetter(letter, () => {
+                        letterSpan.classList.remove("flash");
+                        index++;
+                        speakNextLetter();
+                    });
+                } else {
+                    speakWord(currentWord.word, () => {
+                        if (usedWords.length >= vocabulary.length) {
+                            showCongratulations();
+                            lettersContainer.innerHTML = "";
+                            wordContainer.innerHTML = "";
+                            wordMeaning.textContent = "";
+                            feedback.textContent = "";
+                            startBtn.disabled = true;
+                            replayBtn.disabled = true;
+                        } else {
+                            startNewRound();
+                        }
+                    });
+                }
+            }
+            speakNextLetter();
+        }
+
+        function startNewRound() {
+            currentWord = getRandomWord();
+            if (!currentWord) {
+                showCongratulations();
+                return;
+            }
+            currentLetterIndex = 0;
+            wordMeaning.innerHTML = `Meaning: ${currentWord.meaning} ${currentWord.emoji}`;
+            feedback.textContent = "";
+            displayJumbledLetters(currentWord.word);
+            displayWordProgress();
+            speakLetter(currentWord.word[0]);
+            startBtn.disabled = true;
+            resetBtn.disabled = false;
+            replayBtn.disabled = false;
+        }
+
+        function resetGame() {
+            score = 0;
+            wordsCompleted = 0;
+            usedWords = [];
+            scoreDisplay.textContent = `Score: ${score}`;
+            wordCountDisplay.textContent = `Words Completed: ${wordsCompleted}/${vocabulary.length}`;
+            wordContainer.innerHTML = "";
+            lettersContainer.innerHTML = "";
+            wordMeaning.textContent = "";
+            feedback.textContent = "";
+            congratulations.style.display = "none";
+            particles = [];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            startBtn.disabled = false;
+            resetBtn.disabled = true;
+            replayBtn.disabled = true;
+            speechSynthesis.cancel();
+        }
+
+        replayBtn.addEventListener("click", () => {
+            if (currentWord && currentLetterIndex < currentWord.word.length) {
+                speechSynthesis.cancel();
+                speakLetter(currentWord.word[currentLetterIndex]);
+            }
+        });
+
+        startBtn.addEventListener("click", startNewRound);
+        resetBtn.addEventListener("click", resetGame);
+
+        // Initial state
+        resetBtn.disabled = true;
+        replayBtn.disabled = true;
+    </script>
+</body>
+</html>
